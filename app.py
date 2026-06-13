@@ -176,12 +176,40 @@ with st.sidebar:
 
 @st.cache_resource
 def load_sample_data():
-    """Load sample logs for demo."""
+    """Load or generate sample logs for demo."""
     if os.path.exists('data/test_logs.csv'):
         df = pd.read_csv('data/test_logs.csv')
         df['timestamp'] = pd.to_datetime(df['timestamp'])
         return df
-    return None
+
+    # Generate sample data if files don't exist (for Streamlit Cloud)
+    np.random.seed(42)
+    dates = pd.date_range(start='2026-06-08', end='2026-06-13', freq='1min')
+
+    devices = ['router-core-01', 'router-core-02', 'switch-dist-01', 'switch-dist-02',
+               'firewall-01', 'firewall-02', 'gateway-01', 'gateway-02', 'ap-01', 'ap-02', 'ap-03']
+
+    messages = ['Interface up', 'BGP session established', 'Connection timeout', 'Device unreachable',
+                'High CPU utilization', 'Memory usage above threshold', 'Authentication failed']
+
+    severities = ['INFO', 'WARNING', 'ERROR', 'CRITICAL']
+
+    data = []
+    for i in range(len(dates)):
+        is_anomaly = 1 if np.random.random() < 0.10 else 0
+        severity = np.random.choice(severities, p=[0.6, 0.25, 0.1, 0.05] if is_anomaly == 0 else [0.1, 0.2, 0.4, 0.3])
+
+        data.append({
+            'timestamp': dates[i],
+            'severity': severity,
+            'device': np.random.choice(devices),
+            'source_ip': f'192.168.{np.random.randint(1,10)}.{np.random.randint(1,255)}',
+            'message': np.random.choice(messages),
+            'is_anomaly': is_anomaly
+        })
+
+    df = pd.DataFrame(data)
+    return df
 
 @st.cache_resource
 def load_models():
@@ -352,14 +380,6 @@ if page == "🏠 Dashboard":
         else:
             st.info("No anomalies found in the selected period.")
 
-    else:
-        st.warning("⚠️ Demo data not available. Generating sample data...")
-        st.info("""
-        To use this dashboard:
-        1. Run: `python log_generator.py`
-        2. Run: `python baseline_models.py`
-        3. Refresh the app
-        """)
 
 # ============================================================================
 # PAGE 2: MODEL COMPARISON
