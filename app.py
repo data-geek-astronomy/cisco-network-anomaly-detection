@@ -174,7 +174,6 @@ with st.sidebar:
 # HELPER FUNCTIONS
 # ============================================================================
 
-@st.cache_resource
 def load_sample_data():
     """Load or generate sample logs for demo."""
     if os.path.exists('data/test_logs.csv'):
@@ -257,8 +256,12 @@ if page == "🏠 Dashboard":
     df = load_sample_data()
 
     if df is not None:
-        # Apply threshold filter for dashboard
-        df_filtered = df[df['is_anomaly'] >= anomaly_threshold].copy() if anomaly_threshold > 0 else df.copy()
+        # Apply threshold filter - only show anomalies if threshold is high enough
+        # If threshold < 0.5, show all data; >= 0.5, show only anomalies
+        if anomaly_threshold < 0.5:
+            df_filtered = df.copy()
+        else:
+            df_filtered = df[df['is_anomaly'] == 1].copy()
 
         # Key metrics
         col1, col2, col3, col4 = st.columns(4)
