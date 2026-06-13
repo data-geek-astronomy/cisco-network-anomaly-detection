@@ -175,13 +175,13 @@ with st.sidebar:
 # ============================================================================
 
 def load_sample_data():
-    """Load or generate sample logs for demo."""
+    """Load or generate sample logs with anomaly confidence scores."""
     if os.path.exists('data/test_logs.csv'):
         df = pd.read_csv('data/test_logs.csv')
         df['timestamp'] = pd.to_datetime(df['timestamp'])
         return df
 
-    # Generate sample data if files don't exist (for Streamlit Cloud)
+    # Generate sample data with confidence scores (for Streamlit Cloud)
     np.random.seed(42)
     dates = pd.date_range(start='2026-06-08', end='2026-06-13', freq='1min')
 
@@ -195,8 +195,19 @@ def load_sample_data():
 
     data = []
     for i in range(len(dates)):
-        is_anomaly = 1 if np.random.random() < 0.10 else 0
-        severity = np.random.choice(severities, p=[0.6, 0.25, 0.1, 0.05] if is_anomaly == 0 else [0.1, 0.2, 0.4, 0.3])
+        # Generate anomaly confidence score (0.0 to 1.0)
+        rand = np.random.random()
+
+        if rand < 0.10:  # 10% anomalies
+            # Anomalies: score between 0.6-0.99
+            anomaly_score = np.random.uniform(0.60, 0.99)
+            is_anomaly = 1
+            severity = np.random.choice(['ERROR', 'CRITICAL'], p=[0.6, 0.4])
+        else:  # 90% normal
+            # Normal logs: score between 0.01-0.45
+            anomaly_score = np.random.uniform(0.01, 0.45)
+            is_anomaly = 0
+            severity = np.random.choice(['INFO', 'WARNING'], p=[0.7, 0.3])
 
         data.append({
             'timestamp': dates[i],
@@ -204,7 +215,8 @@ def load_sample_data():
             'device': np.random.choice(devices),
             'source_ip': f'192.168.{np.random.randint(1,10)}.{np.random.randint(1,255)}',
             'message': np.random.choice(messages),
-            'is_anomaly': is_anomaly
+            'is_anomaly': is_anomaly,
+            'anomaly_score': round(anomaly_score, 3)
         })
 
     df = pd.DataFrame(data)
@@ -256,12 +268,8 @@ if page == "🏠 Dashboard":
     df = load_sample_data()
 
     if df is not None:
-        # Apply threshold filter - only show anomalies if threshold is high enough
-        # If threshold < 0.5, show all data; >= 0.5, show only anomalies
-        if anomaly_threshold < 0.5:
-            df_filtered = df.copy()
-        else:
-            df_filtered = df[df['is_anomaly'] == 1].copy()
+        # Apply threshold filter - show logs where anomaly_score >= threshold
+        df_filtered = df[df['anomaly_score'] >= anomaly_threshold].copy()
 
         # Key metrics
         col1, col2, col3, col4 = st.columns(4)
