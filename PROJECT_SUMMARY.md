@@ -269,7 +269,7 @@ git push -u origin main
 ## Contact & Attribution
 
 **Author**: Aravind Kumar
-**Email**: rahulreddy12365@gmail.com
+**Email**: aravind.kumar.nalukurthi@gmail.com
 **Project**: Cisco/Splunk AI Models - Network Log Anomaly Detection
 **Date**: June 2026
 

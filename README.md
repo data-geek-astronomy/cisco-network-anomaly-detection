@@ -415,7 +415,7 @@ This project is licensed under the MIT License - see LICENSE file for details.
 
 **Aravind Kumar**
 
-- Email: rahulreddy12365@gmail.com
+- Email: aravind.kumar.nalukurthi@gmail.com
 - GitHub: [Portfolio Projects](https://github.com/yourusername)
 
 ---
